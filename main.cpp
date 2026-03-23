@@ -4,94 +4,101 @@
 
 using std::array;
 
-class Robot
-{
-public: 
-    Rectangle rect = { 400, 300, 100, 100 };
-    Vector2 pos = {rect.x, rect.y};
+class Robot {
+public:
+    Rectangle rect;
+    Vector2 pos;
     float rot = 0;
 
-    Vector2 velocity = {0,0};
+    Vector2 velocity = { 0, 0 };
     float angularVelocity = 0;
-    float mass = 10;
-    float inertia;
     
-    array<Vector2, 4> robotCornerPositions;
+    float mass = 10.0f;
+    float inertia;
 
-    Robot(Rectangle rect, int rotation) : rect(rect), rot(rotation) { 
-        pos = {rect.x, rect.y};
-        inertia = (1.0f / 6.0f) * mass * (rect.width * rect.width);
+    Robot(Rectangle rect, float rotation) : rect(rect), rot(rotation) {
+        pos = { rect.x, rect.y };
+        inertia = (1.0f / 12.0f) * mass * (rect.width * rect.width + rect.height * rect.height);
     }
 
     void updateRect() {
         rect.x = pos.x;
         rect.y = pos.y;
-
-        robotCornerPositions = updateCorners(pos, rot);
     }
 
-    array<Vector2, 4> updateCorners(Vector2 position, float rotation) {
+    array<Vector2, 4> getCorners(Vector2 position, float rotation) {
         float rad = rotation * (PI / 180.0f);
         float cosA = cos(rad);
         float sinA = sin(rad);
 
-        array<Vector2, 4> cornerPositions;
-
         float w2 = rect.width / 2.0f;
         float h2 = rect.height / 2.0f;
 
-        Vector2 offsets[4] = {
-            { -w2, -h2 },
-            {  w2, -h2 },
-            {  w2,  h2 },
-            { -w2,  h2 }
+        array<Vector2, 4> offsets = {
+            Vector2{-w2, -h2}, Vector2{w2, -h2},
+            Vector2{w2, h2}, Vector2{-w2, h2}
         };
 
+        array<Vector2, 4> corners;
         for (int i = 0; i < 4; i++) {
-            cornerPositions[i].x = position.x + (offsets[i].x * cosA - offsets[i].y * sinA);
-            cornerPositions[i].y = position.y + (offsets[i].x * sinA + offsets[i].y * cosA);
+            corners[i].x = position.x + (offsets[i].x * cosA - offsets[i].y * sinA);
+            corners[i].y = position.y + (offsets[i].x * sinA + offsets[i].y * cosA);
         }
-
-        return cornerPositions;
+        return corners;
     }
 
-    bool isLegal(Vector2 p, float r, Vector2 screen) {
-        auto corners = updateCorners(p, r);
+    void move(Vector2 screen, float dt) {
+        pos.x += velocity.x * dt;
+        pos.y += velocity.y * dt;
+        rot += angularVelocity * dt;
+
+        auto corners = getCorners(pos, rot);
         for (const auto& c : corners) {
-            if (c.x < 0 || c.x > screen.x || c.y < 0 || c.y > screen.y) return false;
-        }
-        return true;
-    }
+            Vector2 normal = { 0, 0 };
+            float penetration = 0;
 
-    void move(Vector2 screenSize, float dt) {
-        Vector2 nextX = {pos.x + velocity.x * dt, pos.y};
-        if (isLegal(nextX, rot, screenSize)) {
-            pos.x = nextX.x;
-        } else {
-            velocity.x = 0;
+            if (c.x < 0) { normal.x = 1;  penetration = -c.x; }
+            else if (c.x > screen.x) { normal.x = -1; penetration = c.x - screen.x; }
+            
+            if (c.y < 0) { normal.y = 1;  penetration = -c.y; }
+            else if (c.y > screen.y) { normal.y = -1; penetration = c.y - screen.y; }
+
+            if (normal.x != 0 || normal.y != 0) {
+                Vector2 r = { c.x - pos.x, c.y - pos.y };
+
+                float angRad = angularVelocity * (PI / 180.0f);
+                Vector2 vCorner = { 
+                    velocity.x - angRad * r.y, 
+                    velocity.y + angRad * r.x 
+                };
+                float velAlongNormal = vCorner.x * normal.x + vCorner.y * normal.y;
+
+                if (velAlongNormal < 0) {
+                    float e = 0.0f;
+
+                    float rCrossN = (r.x * normal.y - r.y * normal.x);
+
+                    float j = -(1.0f + e) * velAlongNormal;
+                    j /= (1.0f / mass) + (rCrossN * rCrossN / inertia);
+
+                    velocity.x += (j * normal.x) / mass;
+                    velocity.y += (j * normal.y) / mass;
+
+                    float angularImpulse = (rCrossN * j) / inertia;
+                    angularVelocity += angularImpulse * (180.0f / PI);
+                }
+
+                pos.x += normal.x * penetration;
+                pos.y += normal.y * penetration;
+            }
         }
 
-        Vector2 nextY = {pos.x, pos.y + velocity.y * dt};
-        if (isLegal(nextY, rot, screenSize)) {
-            pos.y = nextY.y;
-        } else {
-            velocity.y = 0;
-        }
-
-        float nextRot = rot + angularVelocity * dt;
-        if (isLegal(pos, nextRot, screenSize)) {
-            rot = nextRot;
-        } else {
-            angularVelocity = 0;
-        }
-
-        velocity.x *= 0.1f * dt; 
-        velocity.y *= 0.1f * dt;
-        angularVelocity *= 0.1f * dt; 
+        velocity.x *= 0.95f;
+        velocity.y *= 0.95f;
+        angularVelocity *= 0.90f;
 
         updateRect();
     }
-
 
     void turn(float num) {
         angularVelocity += num;
