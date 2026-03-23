@@ -13,10 +13,15 @@ public:
 
     Vector2 velocity = {0,0};
     float angularVelocity = 0;
+    float mass = 10;
+    float inertia;
     
     array<Vector2, 4> robotCornerPositions;
 
-    Robot(Rectangle rect, int rotation) : rect(rect), rot(rotation) { }
+    Robot(Rectangle rect, int rotation) : rect(rect), rot(rotation) { 
+        pos = {rect.x, rect.y};
+        inertia = (1.0f / 6.0f) * mass * (rect.width * rect.width);
+    }
 
     void updateRect() {
         rect.x = pos.x;
@@ -50,29 +55,36 @@ public:
         return cornerPositions;
     }
 
-    void move(float distance, Vector2 screenSize = {600, 400}) {
-        float rad = rot * (PI / 180.0f);
-        float dx = cos(rad) * distance;
-        float dy = sin(rad) * distance;
-
-        Vector2 nextX = {pos.x + dx, pos.y};
-        auto cornersX = updateCorners(nextX, rot);
-        bool xCanMove = true;
-        for (const auto& c : cornersX) {
-            if (c.x < 0 || c.x > screenSize.x) { xCanMove = false; break; }
+    bool isLegal(Vector2 p, float r, Vector2 screen) {
+        auto corners = updateCorners(p, r);
+        for (const auto& c : corners) {
+            if (c.x < 0 || c.x > screen.x || c.y < 0 || c.y > screen.y) return false;
         }
-        if (xCanMove) pos.x = nextX.x;
+        return true;
+    }
 
-        Vector2 nextY = {pos.x, pos.y + dy};
-        auto cornersY = updateCorners(nextY, rot);
-        bool yCanMove = true;
-        for (const auto& c : cornersY) {
-            if (c.y < 0 || c.y > screenSize.y) { yCanMove = false; break; }
+    void move(Vector2 screenSize, float dt) {
+        Vector2 nextX = {pos.x + velocity.x * dt, pos.y};
+        if (isLegal(nextX, rot, screenSize)) {
+            pos.x = nextX.x;
+        } else {
+            velocity.x = 0;
         }
-        if (yCanMove) pos.y = nextY.y;
+
+        Vector2 nextY = {pos.x, pos.y + velocity.y * dt};
+        if (isLegal(nextY, rot, screenSize)) {
+            pos.y = nextY.y;
+        } else {
+            velocity.y = 0;
+        }
+
+        velocity.x *= 0.9f; 
+        velocity.y *= 0.9f;
+        angularVelocity *= 0.9f; 
 
         updateRect();
     }
+
 
     void turn(float num, Vector2 screenSize = {600, 400}) {
         float potentialRot = rot;
@@ -108,12 +120,31 @@ int main() {
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
+        float acceleration = 1000.0f;
         float rotationSpeed = 150.0f;
 
-        if (IsKeyDown(KEY_UP))    { player.move(pixelsPerSec * dt, WINDOW_SIZE); }
-        if (IsKeyDown(KEY_DOWN))  { player.move(-pixelsPerSec * dt, WINDOW_SIZE); }
-        if (IsKeyDown(KEY_LEFT))  { player.turn(-rotationSpeed * dt); }
-        if (IsKeyDown(KEY_RIGHT)) { player.turn(rotationSpeed * dt); }
+        float rad = player.rot * (PI / 180.0f);
+        if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) {
+            player.velocity.x += cos(rad) * acceleration * dt;
+            player.velocity.y += sin(rad) * acceleration * dt;
+        }
+        if (IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S)) {
+            player.velocity.x -= cos(rad) * acceleration * dt;
+            player.velocity.y -= sin(rad) * acceleration * dt;
+        }
+        if (IsKeyDown(KEY_Q)) {
+            player.velocity.x += cos(rad - PI/2.0f) * acceleration * dt;
+            player.velocity.y += sin(rad - PI/2.0f) * acceleration * dt;
+        }
+        if (IsKeyDown(KEY_E)) {
+            player.velocity.x += cos(rad + PI/2.0f) * acceleration * dt;
+            player.velocity.y += sin(rad + PI/2.0f) * acceleration * dt;
+        }
+
+        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))  { player.turn(-rotationSpeed * dt, WINDOW_SIZE); }
+        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) { player.turn(rotationSpeed * dt, WINDOW_SIZE); }
+
+        player.move(WINDOW_SIZE, dt); 
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
