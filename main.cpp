@@ -78,34 +78,23 @@ public:
             velocity.y = 0;
         }
 
-        velocity.x *= 0.9f; 
-        velocity.y *= 0.9f;
-        angularVelocity *= 0.9f; 
+        float nextRot = rot + angularVelocity * dt;
+        if (isLegal(pos, nextRot, screenSize)) {
+            rot = nextRot;
+        } else {
+            angularVelocity = 0;
+        }
+
+        velocity.x *= 0.1f * dt; 
+        velocity.y *= 0.1f * dt;
+        angularVelocity *= 0.1f * dt; 
 
         updateRect();
     }
 
 
-    void turn(float num, Vector2 screenSize = {600, 400}) {
-        float potentialRot = rot;
-        float rad = rot * (PI / 180.0f);
-        potentialRot += num;
-
-        array<Vector2, 4> potentialCorners = updateCorners(pos, potentialRot);
-
-        bool insideBounds = true;
-        for (int i = 0; i < 4; i++) {
-            if (potentialCorners[i].x > screenSize.x || potentialCorners[i].x < 0 || 
-                potentialCorners[i].y > screenSize.y || potentialCorners[i].y < 0) {
-                insideBounds = false;
-                break; 
-            }
-        }
-
-        if (insideBounds) {
-            rot = potentialRot;
-            updateRect();
-        }
+    void turn(float num) {
+        angularVelocity += num;
     }
 };
 
@@ -120,8 +109,8 @@ int main() {
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
-        float acceleration = 1000.0f;
-        float rotationSpeed = 150.0f;
+        float acceleration = 7000.0f;
+        float rotationAccel = 5500.0f;
 
         float rad = player.rot * (PI / 180.0f);
         if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) {
@@ -141,8 +130,12 @@ int main() {
             player.velocity.y += sin(rad + PI/2.0f) * acceleration * dt;
         }
 
-        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))  { player.turn(-rotationSpeed * dt, WINDOW_SIZE); }
-        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) { player.turn(rotationSpeed * dt, WINDOW_SIZE); }
+        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))  { 
+            player.turn(-rotationAccel * dt);
+        }
+        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) { 
+            player.turn(rotationAccel * dt);
+        }
 
         player.move(WINDOW_SIZE, dt); 
 
