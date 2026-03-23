@@ -10,8 +10,6 @@ find_package(raylib REQUIRED)
 
 add_executable(main 
     main.cpp
-    header.c
-    header.h
 )
 
 target_compile_options(main PRIVATE -O3)
