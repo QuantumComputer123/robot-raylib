@@ -93,9 +93,9 @@ public:
             }
         }
 
-        velocity.x *= 0.95f;
-        velocity.y *= 0.95f;
-        angularVelocity *= 0.90f;
+        velocity.x *= 0.85f;
+        velocity.y *= 0.85f;
+        angularVelocity *= 0.85f;
 
         updateRect();
     }
@@ -116,8 +116,8 @@ int main() {
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
-        float acceleration = 7000.0f;
-        float rotationAccel = 5500.0f;
+        float acceleration = 1500.0f;
+        float rotationAccel = 1500.0f;
 
         float rad = player.rot * (PI / 180.0f);
         if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) {
