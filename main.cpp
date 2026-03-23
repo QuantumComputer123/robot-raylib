@@ -121,11 +121,11 @@ int main() {
             player.velocity.x -= cos(rad) * acceleration * dt;
             player.velocity.y -= sin(rad) * acceleration * dt;
         }
-        if (IsKeyDown(KEY_Q)) {
+        if (IsKeyDown(KEY_Q) || IsKeyDown(KEY_COMMA)) {
             player.velocity.x += cos(rad - PI/2.0f) * acceleration * dt;
             player.velocity.y += sin(rad - PI/2.0f) * acceleration * dt;
         }
-        if (IsKeyDown(KEY_E)) {
+        if (IsKeyDown(KEY_E) || IsKeyDown(KEY_PERIOD)) {
             player.velocity.x += cos(rad + PI/2.0f) * acceleration * dt;
             player.velocity.y += sin(rad + PI/2.0f) * acceleration * dt;
         }
@@ -143,8 +143,7 @@ int main() {
         ClearBackground(RAYWHITE);
         DrawRectanglePro(player.rect, (Vector2){player.rect.width/2, player.rect.height/2}, player.rot, BLUE);
         EndDrawing();
-}
-
+    }
     CloseWindow();
     return 0;
 }
