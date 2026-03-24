@@ -52,8 +52,8 @@ public:
         pos.y += velocity.y * dt;
         rot += angularVelocity * dt;
 
-        auto corners = getCorners(pos, rot);
-        for (const auto& c : corners) {
+        array<Vector2, 4> corners = getCorners(pos, rot);
+        for (const Vector2& c : corners) {
             Vector2 normal = { 0, 0 };
             float penetration = 0;
 
@@ -67,7 +67,7 @@ public:
                 Vector2 r = { c.x - pos.x, c.y - pos.y };
 
                 float angRad = angularVelocity * (PI / 180.0f);
-                Vector2 vCorner = { 
+                Vector2 vCorner = {
                     velocity.x - angRad * r.y, 
                     velocity.y + angRad * r.x 
                 };
@@ -106,7 +106,7 @@ public:
 };
 
 int main() {
-    Vector2 WINDOW_SIZE = {600,400};
+    Vector2 WINDOW_SIZE = {800,800};
     InitWindow(WINDOW_SIZE.x, WINDOW_SIZE.y, "Game");
     SetTargetFPS(60);
     Robot player = {{300,200,100,100}, 0};
