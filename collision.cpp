@@ -29,25 +29,43 @@ array<Vector2, 4> getCorners(Rectangle rect, float rotation) {
     return corners;
 }
 
-bool isOverlap(Rectangle rectA, float rotA, Rectangle rectB, float rotB) {
-    array<Vector2, 4> cornersA = getCorners(rectA, rotA);
-    array<Vector2, 4> cornersB = getCorners(rectB, rotB);
+CollisionResult getCollision(Rectangle rectA, float rotA, Rectangle rectB, float rotB) {
+    auto cornersA = getCorners(rectA, rotA);
+    auto cornersB = getCorners(rectB, rotB);
+    
+    float minOverlap = INFINITY;
+    Vector2 smallestAxis = {0, 0};
 
+    // Standard SAT axes (normals of the sides)
     vector<Vector2> axes = {
-        Vector2Normalize(Vector2Subtract(cornersA[1], cornersA[0])),
-        Vector2Normalize(Vector2Subtract(cornersA[2], cornersA[1])),
-        Vector2Normalize(Vector2Subtract(cornersB[1], cornersB[0])),
-        Vector2Normalize(Vector2Subtract(cornersB[2], cornersB[1]))
+        Vector2Normalize({-(cornersA[1].y - cornersA[0].y), cornersA[1].x - cornersA[0].x}),
+        Vector2Normalize({-(cornersA[2].y - cornersA[1].y), cornersA[2].x - cornersA[1].x}),
+        Vector2Normalize({-(cornersB[1].y - cornersB[0].y), cornersB[1].x - cornersB[0].x}),
+        Vector2Normalize({-(cornersB[2].y - cornersB[1].y), cornersB[2].x - cornersB[1].x})
     };
 
-    for (const auto& axis : axes) {
-        if (!isOverlapOnAxis(cornersA, cornersB, axis)) {
-            return false;
+    for (Vector2 axis : axes) {
+        Vector2 rangeA = projectPoints(cornersA, axis);
+        Vector2 rangeB = projectPoints(cornersB, axis);
+
+        float overlap = fmin(rangeA.y, rangeB.y) - fmax(rangeA.x, rangeB.x);
+        if (overlap < 0) return {false}; // Gap found!
+
+        if (overlap < minOverlap) {
+            minOverlap = overlap;
+            smallestAxis = axis;
         }
     }
 
-    return true;
+    // Ensure the normal points from B to A (so we push A out)
+    Vector2 dir = Vector2Subtract({rectA.x, rectA.y}, {rectB.x, rectB.y});
+    if (Vector2DotProduct(dir, smallestAxis) < 0) {
+        smallestAxis = Vector2Scale(smallestAxis, -1);
+    }
+
+    return {true, smallestAxis, minOverlap};
 }
+
 
 bool isOverlapOnAxis(const array<Vector2, 4>& cornersA, const array<Vector2, 4>& cornersB, Vector2 axis) {
     Vector2 rangeA = projectPoints(cornersA, axis);
