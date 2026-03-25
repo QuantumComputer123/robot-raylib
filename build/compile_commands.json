@@ -4,5 +4,11 @@
   "command": "/opt/homebrew/opt/llvm/bin/clang++  -I/Users/param/VSCode/c++Stuff/robot/robot-raylib -isystem /opt/homebrew/include -g -arch arm64 -O3 -I/opt/homebrew/Cellar/raylib/5.5/include -o CMakeFiles/main.dir/main.cpp.o -c /Users/param/VSCode/c++Stuff/robot/robot-raylib/main.cpp",
   "file": "/Users/param/VSCode/c++Stuff/robot/robot-raylib/main.cpp",
   "output": "CMakeFiles/main.dir/main.cpp.o"
+},
+{
+  "directory": "/Users/param/VSCode/c++Stuff/robot/robot-raylib/build",
+  "command": "/opt/homebrew/opt/llvm/bin/clang++  -I/Users/param/VSCode/c++Stuff/robot/robot-raylib -isystem /opt/homebrew/include -g -arch arm64 -O3 -I/opt/homebrew/Cellar/raylib/5.5/include -o CMakeFiles/main.dir/collision.cpp.o -c /Users/param/VSCode/c++Stuff/robot/robot-raylib/collision.cpp",
+  "file": "/Users/param/VSCode/c++Stuff/robot/robot-raylib/collision.cpp",
+  "output": "CMakeFiles/main.dir/collision.cpp.o"
 }
 ]

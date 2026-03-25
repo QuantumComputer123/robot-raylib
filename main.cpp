@@ -1,10 +1,13 @@
 #include <cmath>
-#include "raylib.h"
 #include <array>
+#include <vector>
+#include "raylib.h"
+#include "collision.h"
 
 using std::array;
+using std::vector;
 
-class Robot {
+class Robot {  
 public:
     Rectangle rect;
     Vector2 pos;
@@ -47,12 +50,7 @@ public:
         return corners;
     }
 
-    void move(Vector2 screen, float dt) {
-        pos.x += velocity.x * dt;
-        pos.y += velocity.y * dt;
-        rot += angularVelocity * dt;
-
-        array<Vector2, 4> corners = getCorners(pos, rot);
+    void collide(Vector2 screen, array<Vector2, 4> corners) {
         for (const Vector2& c : corners) {
             Vector2 normal = { 0, 0 };
             float penetration = 0;
@@ -92,6 +90,14 @@ public:
                 pos.y += normal.y * penetration;
             }
         }
+    }
+
+    void move(Vector2 screen, float dt) {
+        pos.x += velocity.x * dt;
+        pos.y += velocity.y * dt;
+        rot += angularVelocity * dt;
+
+        collide(screen, getCorners(pos, rot));
 
         velocity.x *= 0.85f;
         velocity.y *= 0.85f;
@@ -105,6 +111,19 @@ public:
     }
 };
 
+class Obstacle {
+public:
+    Rectangle rect;
+    Vector2 pos;
+    float rot = 0;
+    array<Vector2, 4> corners;
+
+    Obstacle(Rectangle rect, float rotation) : rect(rect), rot(rotation) {
+        pos = { rect.x, rect.y };
+        corners = getCorners(rect, rot);
+    }
+};
+
 int main() {
     Vector2 WINDOW_SIZE = {800,800};
     InitWindow(WINDOW_SIZE.x, WINDOW_SIZE.y, "Game");
@@ -112,6 +131,7 @@ int main() {
     Robot player = {{300,200,100,100}, 0};
     double speed = 2;
     std::array<bool, 6> pressedKeys = {0,0,0,0,0,0};
+    std::vector<Obstacle> obstacles;
     int pixelsPerSec = 60 * speed;
 
     while (!WindowShouldClose()) {

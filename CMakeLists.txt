@@ -10,6 +10,8 @@ find_package(raylib REQUIRED)
 
 add_executable(main 
     main.cpp
+    collision.h
+    collision.cpp
 )
 
 target_compile_options(main PRIVATE -O3)

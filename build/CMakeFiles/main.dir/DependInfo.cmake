@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/Users/param/VSCode/c++Stuff/robot/robot-raylib/collision.cpp" "CMakeFiles/main.dir/collision.cpp.o" "gcc" "CMakeFiles/main.dir/collision.cpp.o.d"
   "/Users/param/VSCode/c++Stuff/robot/robot-raylib/main.cpp" "CMakeFiles/main.dir/main.cpp.o" "gcc" "CMakeFiles/main.dir/main.cpp.o.d"
   )
 
